@@ -903,9 +903,13 @@ def api_quiz_progressive():
 def submit_quiz():
     payload = request.get_json(force=True)
     student_id = session.get("student_id")
-    attempt_id = payload.get("attempt_id")
+    attempt_id_raw = payload.get("attempt_id")
     answers = payload.get("answers", [])
-    if not attempt_id or not answers:
+    if attempt_id_raw is None or not answers:
+        abort(400)
+    try:
+        attempt_id = int(attempt_id_raw)
+    except (TypeError, ValueError):
         abort(400)
     db = get_db()
     cur = db.execute(
@@ -937,7 +941,7 @@ def submit_quiz():
             INSERT INTO response (student_id, attempt_id, quiz_id, answer, score, response_time_s)
             VALUES (?, ?, ?, ?, ?, ?)
             """,
-            (student_id, attempt_id, quiz_id, answer, score, float(time_sec)),
+        (student_id, attempt_id, quiz_id, answer, score, float(time_sec)),
         )
     db.execute(
         """
@@ -962,12 +966,16 @@ def submit_quiz():
         total_correct,
         round((total_correct / 30) * 100, 2),
     )
+    score_pct = round((total_correct / 30) * 100, 2)
+    redirect_url = url_for("review", attempt_id=int(attempt_id))
     return jsonify(
         {
-            "attempt_id": attempt_id,
-            "total": 30,
-            "correct": total_correct,
-            "score_pct": round((total_correct / 30) * 100, 2),
+            "ok": True,
+            "attempt_id": int(attempt_id),
+            "total": int(30),
+            "correct": int(total_correct),
+            "score_pct": float(score_pct),
+            "redirect_url": redirect_url,
         }
     )
 

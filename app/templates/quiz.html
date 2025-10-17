@@ -85,18 +85,9 @@ document.getElementById("btn-next").addEventListener("click", () => {
     showQuestion(currentIndex + 1);
 });
 
-document.getElementById("btn-submit").addEventListener("click", () => {
-    if (!quizItems.length) return;
-    recordTime();
-    const payload = {
-        student_id: studentId,
-        attempt_id: attemptId,
-        answers: quizItems.map(item => ({
-            quiz_id: item.quiz_id,
-            answer: answers[item.quiz_id] ? answers[item.quiz_id].answer : "",
-            time_sec: times[item.quiz_id] || 0
-        }))
-    };
+const REVIEW_URL_TEMPLATE = "{{ url_for('review', attempt_id=0) }}";
+
+function submitQuiz(payload) {
     fetch("{{ url_for('submit_quiz') }}", {
         method: "POST",
         headers: {
@@ -111,12 +102,33 @@ document.getElementById("btn-submit").addEventListener("click", () => {
         return response.json();
     })
     .then(data => {
-        window.location.href = `{{ url_for('review', attempt_id='__ID__') }}`.replace("__ID__", data.attempt_id);
+        if (data && data.redirect_url) {
+            window.location.href = data.redirect_url;
+        } else if (data && typeof data.attempt_id !== "undefined") {
+            window.location.href = REVIEW_URL_TEMPLATE.replace(/0$/, String(data.attempt_id));
+        } else {
+            alert("Submission succeeded but no attempt id returned.");
+        }
     })
     .catch(err => {
-        console.error(err);
-        alert("Submission error. Please try again.");
+        console.error("Submit failed:", err);
+        alert("Submit failed. Please try again.");
     });
+}
+
+document.getElementById("btn-submit").addEventListener("click", () => {
+    if (!quizItems.length) return;
+    recordTime();
+    const payload = {
+        student_id: studentId,
+        attempt_id: attemptId,
+        answers: quizItems.map(item => ({
+            quiz_id: item.quiz_id,
+            answer: answers[item.quiz_id] ? answers[item.quiz_id].answer : "",
+            time_sec: times[item.quiz_id] || 0
+        }))
+    };
+    submitQuiz(payload);
 });
 
 loadQuiz();
