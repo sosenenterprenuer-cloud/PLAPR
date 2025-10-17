@@ -1,0 +1,48 @@
+{% extends 'base.html' %}
+{% block content %}
+<h2>Attempt Review</h2>
+<p><strong>Score:</strong> {{ attempt['items_correct'] }} / {{ attempt['items_total'] }} ({{ attempt['score_pct'] }}%)</p>
+<p class="small-text">Completed on {{ attempt['finished_at'] }}</p>
+<div class="card">
+    <h3>Performance by Topic</h3>
+    <ul>
+        {% for item in attempt_topic_pct %}
+            <li>{{ item.topic }}: {{ item.percent }}%</li>
+        {% endfor %}
+    </ul>
+</div>
+<div class="card">
+    <h3>Lifetime Best by Topic</h3>
+    <ul>
+        {% for topic, pct in best_by_topic.items() %}
+            <li>{{ topic }}: {{ pct }}%</li>
+        {% endfor %}
+    </ul>
+</div>
+{% if unlocked %}
+<div class="banner">Next recommendation: Database Development Process (Visible on your Dashboard)</div>
+{% endif %}
+{% if feedback_submitted %}
+<div class="notice.success">Feedback has been submitted.</div>
+{% endif %}
+<div class="actions">
+    <a class="btn primary" href="{{ url_for('thanks', attempt_id=attempt['attempt_id']) }}">Leave Feedback</a>
+    <a class="btn primary" href="{{ url_for('quiz') }}">Try Again</a>
+</div>
+<h3>Question Review</h3>
+{% for item in review_items %}
+<div class="review-item">
+    <p><strong>{{ loop.index }}. {{ item.question }}</strong></p>
+    <p class="question-meta">Topic: {{ item.topic }}</p>
+    <p>Your answer: {{ item.your_answer_label }}{% if item.your_answer_text %} - {{ item.your_answer_text }}{% endif %}</p>
+    {% if not item.is_correct %}
+        <p>Correct answer: {{ item.correct_label }} - {{ item.correct_text }}</p>
+    {% else %}
+        <p class="small-text">Correct!</p>
+    {% endif %}
+    {% if item.explanation %}
+        <p><em>Explanation:</em> {{ item.explanation }}</p>
+    {% endif %}
+</div>
+{% endfor %}
+{% endblock %}

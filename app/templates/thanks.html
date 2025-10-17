@@ -1,0 +1,17 @@
+{% extends 'base.html' %}
+{% block content %}
+<h2>Share your feedback</h2>
+<form method="post" action="{{ url_for('api_feedback') }}">
+    <input type="hidden" name="attempt_id" value="{{ attempt_id }}">
+    <label for="rating">Your rating (1-5)</label>
+    <select id="rating" name="rating" required>
+        <option value="">Select</option>
+        {% for n in range(1,6) %}
+        <option value="{{ n }}">{{ n }}</option>
+        {% endfor %}
+    </select>
+    <label for="comment">Comments</label>
+    <textarea id="comment" name="comment" rows="3"></textarea>
+    <button class="btn primary" type="submit">Submit Feedback</button>
+</form>
+{% endblock %}

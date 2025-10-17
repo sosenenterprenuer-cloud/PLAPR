@@ -1,0 +1,136 @@
+{% extends 'base.html' %}
+{% block content %}
+<h2>Database Mastery Quiz</h2>
+<div class="quiz-container">
+    <div id="quiz-status" class="small-text"></div>
+    <div id="quiz-question"></div>
+    <ul id="quiz-options" class="option-list"></ul>
+    <div class="quiz-nav">
+        <button class="btn primary" id="btn-prev" type="button">Back</button>
+        <button class="btn primary" id="btn-next" type="button">Next</button>
+    </div>
+    <div class="actions">
+        <button class="btn primary" id="btn-submit" type="button">Submit Attempt</button>
+    </div>
+</div>
+<script>
+const attemptId = {{ attempt_id }};
+const studentId = {{ student_id }};
+let quizItems = [];
+let currentIndex = 0;
+let answers = {};
+let times = {};
+let questionStart = Date.now();
+
+function loadQuiz() {
+    fetch("{{ url_for('api_quiz_progressive') }}")
+        .then(response => response.json())
+        .then(data => {
+            quizItems = data;
+            if (quizItems.length !== 30) {
+                alert("Question bank must contain 30 questions.");
+            }
+            showQuestion(0);
+        })
+        .catch(err => {
+            console.error(err);
+            alert("Unable to load quiz questions.");
+        });
+}
+
+function recordTime() {
+    if (!quizItems.length) return;
+    const current = quizItems[currentIndex];
+    const elapsed = (Date.now() - questionStart) / 1000;
+    times[current.quiz_id] = (times[current.quiz_id] || 0) + elapsed;
+}
+
+function showQuestion(index) {
+    currentIndex = index;
+    questionStart = Date.now();
+    const total = quizItems.length;
+    const current = quizItems[currentIndex];
+    document.getElementById("quiz-status").textContent = `Question ${currentIndex + 1} of ${total}`;
+    document.getElementById("quiz-question").innerHTML = `<h3>${current.question}</h3>`;
+    const list = document.getElementById("quiz-options");
+    list.innerHTML = "";
+    current.options.forEach(option => {
+        const li = document.createElement("li");
+        li.dataset.value = option.value;
+        li.dataset.label = option.label;
+        li.textContent = `${option.label}. ${option.text}`;
+        if (answers[current.quiz_id] && answers[current.quiz_id].answer === option.value) {
+            li.classList.add("selected");
+        }
+        li.addEventListener("click", () => {
+            [...list.children].forEach(child => child.classList.remove("selected"));
+            li.classList.add("selected");
+            answers[current.quiz_id] = { answer: option.value, label: option.label };
+        });
+        list.appendChild(li);
+    });
+    document.getElementById("btn-prev").disabled = currentIndex === 0;
+    document.getElementById("btn-next").disabled = currentIndex === total - 1;
+}
+
+document.getElementById("btn-prev").addEventListener("click", () => {
+    if (currentIndex === 0) return;
+    recordTime();
+    showQuestion(currentIndex - 1);
+});
+
+document.getElementById("btn-next").addEventListener("click", () => {
+    if (currentIndex >= quizItems.length - 1) return;
+    recordTime();
+    showQuestion(currentIndex + 1);
+});
+
+const REVIEW_URL_TEMPLATE = "{{ url_for('review', attempt_id=0) }}";
+
+function submitQuiz(payload) {
+    fetch("{{ url_for('submit_quiz') }}", {
+        method: "POST",
+        headers: {
+            "Content-Type": "application/json"
+        },
+        body: JSON.stringify(payload)
+    })
+    .then(response => {
+        if (!response.ok) {
+            throw new Error("Submission failed");
+        }
+        return response.json();
+    })
+    .then(data => {
+        if (data && data.redirect_url) {
+            window.location.href = data.redirect_url;
+        } else if (data && typeof data.attempt_id !== "undefined") {
+            window.location.href = REVIEW_URL_TEMPLATE.replace(/0$/, String(data.attempt_id));
+        } else {
+            alert("Submission succeeded but no attempt id returned.");
+        }
+    })
+    .catch(err => {
+        console.error("Submit failed:", err);
+        alert("Submit failed. Please try again.");
+    });
+}
+
+document.getElementById("btn-submit").addEventListener("click", () => {
+    if (!quizItems.length) return;
+    recordTime();
+    const payload = {
+        student_id: studentId,
+        attempt_id: attemptId,
+        answers: quizItems.map(item => ({
+            quiz_id: item.quiz_id,
+            answer: answers[item.quiz_id] ? answers[item.quiz_id].answer : "",
+            time_sec: times[item.quiz_id] || 0
+        }))
+    };
+    submitQuiz(payload);
+});
+
+loadQuiz();
+</script>
+{% endblock %}
