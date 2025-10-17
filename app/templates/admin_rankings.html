@@ -1,0 +1,28 @@
+{% extends 'base.html' %}
+{% block content %}
+<h2>Rankings</h2>
+<table>
+    <thead>
+        <tr>
+            <th>Name</th>
+            <th>Email</th>
+            <th>Attempts</th>
+            <th>Average %</th>
+            <th>Best %</th>
+            <th>Last %</th>
+        </tr>
+    </thead>
+    <tbody>
+        {% for row in rankings %}
+        <tr>
+            <td>{{ row.name }}</td>
+            <td>{{ row.email }}</td>
+            <td>{{ row.attempts }}</td>
+            <td>{{ row.avg_score|round(2) if row.avg_score is not none else '0.00' }}</td>
+            <td>{{ row.best_score|round(2) if row.best_score is not none else '0.00' }}</td>
+            <td>{{ row.last_score|round(2) if row.last_score is not none else '0.00' }}</td>
+        </tr>
+        {% endfor %}
+    </tbody>
+</table>
+{% endblock %}

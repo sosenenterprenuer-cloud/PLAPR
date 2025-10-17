@@ -1,0 +1,74 @@
+{% extends 'base.html' %}
+{% block content %}
+<h2>Welcome, {{ student['name'] }}</h2>
+{% if unlocked %}
+<div class="banner">Next recommendation: Database Development Process</div>
+{% endif %}
+{% if latest_attempt %}
+<div class="card-grid">
+    <div class="card">
+        <h3>Latest Attempt</h3>
+        <p><strong>Score:</strong> {{ latest_attempt['score_pct'] }}%</p>
+        <p class="small-text">Completed on {{ latest_attempt['finished_at'] }}</p>
+    </div>
+    <div class="card">
+        <h3>Topic split</h3>
+        <div class="chart-container">
+            <canvas id="topicChart"></canvas>
+        </div>
+    </div>
+</div>
+{% else %}
+<p>You have not completed an attempt yet. <a href="{{ url_for('quiz') }}">Start the 30-question quiz now.</a></p>
+{% endif %}
+<h3>Attempt history</h3>
+{% if history %}
+<table>
+    <thead>
+        <tr>
+            <th>Date</th>
+            <th>Score %</th>
+            <th>Review</th>
+        </tr>
+    </thead>
+    <tbody>
+        {% for row in history %}
+        <tr>
+            <td>{{ row.finished_at }}</td>
+            <td>{{ row.score_pct }}</td>
+            <td><a href="{{ url_for('review', attempt_id=row.attempt_id) }}">View</a></td>
+        </tr>
+        {% endfor %}
+    </tbody>
+</table>
+{% else %}
+<p>No attempts recorded yet.</p>
+{% endif %}
+{% if latest_attempt %}
+<script>
+const topicLabels = {{ topic_labels|tojson }};
+const topicValues = {{ topic_split|tojson }};
+const ctx = document.getElementById('topicChart').getContext('2d');
+new Chart(ctx, {
+    type: 'bar',
+    data: {
+        labels: topicLabels,
+        datasets: [{
+            label: 'Score %',
+            data: topicValues,
+            backgroundColor: ['#2563eb', '#1d4ed8']
+        }]
+    },
+    options: {
+        responsive: true,
+        scales: {
+            y: {
+                suggestedMin: 0,
+                suggestedMax: 100
+            }
+        }
+    }
+});
+</script>
+{% endif %}
+{% endblock %}

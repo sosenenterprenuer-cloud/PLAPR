@@ -1,0 +1,72 @@
+{% extends 'base.html' %}
+{% block content %}
+<h2>Analytics</h2>
+<h3>Per-student Average Time per Question</h3>
+<table>
+    <thead>
+        <tr>
+            <th>Student</th>
+            <th>Email</th>
+            <th>Quiz ID</th>
+            <th>Question</th>
+            <th>Average Time (s)</th>
+            <th>Responses</th>
+        </tr>
+    </thead>
+    <tbody>
+        {% for row in per_student %}
+        <tr>
+            <td>{{ row.student_name }}</td>
+            <td>{{ row.email }}</td>
+            <td>{{ row.quiz_id }}</td>
+            <td>{{ row.question }}</td>
+            <td>{{ row.avg_time|round(2) if row.avg_time is not none else '0.00' }}</td>
+            <td>{{ row.responses }}</td>
+        </tr>
+        {% endfor %}
+    </tbody>
+</table>
+<h3>Per-question Time Summary</h3>
+<table>
+    <thead>
+        <tr>
+            <th>Quiz ID</th>
+            <th>Question</th>
+            <th>Average (s)</th>
+            <th>Min (s)</th>
+            <th>Max (s)</th>
+            <th>Responses</th>
+        </tr>
+    </thead>
+    <tbody>
+        {% for row in per_question %}
+        <tr>
+            <td>{{ row.quiz_id }}</td>
+            <td>{{ row.question }}</td>
+            <td>{{ row.avg_time|round(2) if row.avg_time is not none else '0.00' }}</td>
+            <td>{{ row.min_time|round(2) if row.min_time is not none else '0.00' }}</td>
+            <td>{{ row.max_time|round(2) if row.max_time is not none else '0.00' }}</td>
+            <td>{{ row.responses }}</td>
+        </tr>
+        {% endfor %}
+    </tbody>
+</table>
+<div class="card-grid">
+    <div class="card">
+        <h3>Slowest 5 Questions (avg time, n ≥ 5)</h3>
+        <ol>
+            {% for row in slowest %}
+            <li>{{ row.question }} — {{ row.avg_time|round(2) }}s ({{ row.responses }} responses)</li>
+            {% endfor %}
+        </ol>
+    </div>
+    <div class="card">
+        <h3>Fastest 5 Questions (avg time, n ≥ 5)</h3>
+        <ol>
+            {% for row in fastest %}
+            <li>{{ row.question }} — {{ row.avg_time|round(2) }}s ({{ row.responses }} responses)</li>
+            {% endfor %}
+        </ol>
+    </div>
+</div>
+{% endblock %}

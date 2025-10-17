@@ -1,0 +1,26 @@
+{% extends 'base.html' %}
+{% block content %}
+<h2>Question Bank</h2>
+<table>
+    <thead>
+        <tr>
+            <th>ID</th>
+            <th>Question</th>
+            <th>Topic</th>
+            <th>Responses</th>
+            <th>Accuracy %</th>
+        </tr>
+    </thead>
+    <tbody>
+        {% for question in questions %}
+        <tr>
+            <td>{{ question.quiz_id }}</td>
+            <td>{{ question.question }}</td>
+            <td>{{ question.topic }}</td>
+            <td>{{ question.responses }}</td>
+            <td>{% if question.accuracy is none %}-{% else %}{{ question.accuracy }}{% endif %}</td>
+        </tr>
+        {% endfor %}
+    </tbody>
+</table>
+{% endblock %}

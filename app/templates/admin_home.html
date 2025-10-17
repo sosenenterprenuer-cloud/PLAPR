@@ -1,0 +1,60 @@
+{% extends 'base.html' %}
+{% block content %}
+<h2>Lecturer Dashboard</h2>
+<div class="card-grid">
+    <div class="card"><h3>Students</h3><p>{{ totals.students }}</p></div>
+    <div class="card"><h3>Attempts</h3><p>{{ totals.attempts }}</p></div>
+    <div class="card"><h3>Responses</h3><p>{{ totals.responses }}</p></div>
+    <div class="card"><h3>Attempts with Responses</h3><p>{{ totals.attempts_with_responses }}</p></div>
+</div>
+<h3>Accuracy by Concept</h3>
+<table>
+    <thead><tr><th>Topic</th><th>Accuracy %</th></tr></thead>
+    <tbody>
+        {% for row in accuracies %}
+        <tr><td>{{ row.topic }}</td><td>{{ row.accuracy }}</td></tr>
+        {% endfor %}
+    </tbody>
+</table>
+<h3>Attempt Activity (Last 14 Days)</h3>
+<div class="chart-container">
+    <canvas id="attemptChart"></canvas>
+</div>
+<div class="actions">
+    <a class="btn primary" href="{{ url_for('admin_analytics') }}">Analytics</a>
+    <a class="btn primary" href="{{ url_for('admin_rankings') }}">Rankings</a>
+    <a class="btn primary" href="{{ url_for('admin_questions') }}">Questions</a>
+</div>
+<script>
+const labels = {{ labels|tojson }};
+const allCounts = {{ counts_all|tojson }};
+const respCounts = {{ counts_resp|tojson }};
+const ctx = document.getElementById('attemptChart').getContext('2d');
+new Chart(ctx, {
+    type: 'line',
+    data: {
+        labels: labels,
+        datasets: [
+            {
+                label: 'Attempts',
+                data: allCounts,
+                borderColor: '#2563eb',
+                backgroundColor: 'rgba(37,99,235,0.2)',
+                tension: 0.2
+            },
+            {
+                label: 'Attempts with Responses',
+                data: respCounts,
+                borderColor: '#10b981',
+                backgroundColor: 'rgba(16,185,129,0.2)',
+                tension: 0.2
+            }
+        ]
+    },
+    options: {
+        responsive: true,
+        maintainAspectRatio: false
+    }
+});
+</script>
+{% endblock %}

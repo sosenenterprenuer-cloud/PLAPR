@@ -1,0 +1,12 @@
+*.db
+*.sqlite*
+*.xlsx
+*.zip
+backups/
+.env
+*.png
+*.jpg
+*.jpeg
+*.pdf
+__pycache__/
+*.pyc
